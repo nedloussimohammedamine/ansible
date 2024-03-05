@@ -1,0 +1,82 @@
+- name: web servers
+  hosts: web
+  become: true
+  tasks:
+    - name: install apache
+      yum:
+        name: httpd
+        state: present
+        update_cache: true
+    - name: install packages
+      yum:
+        name:
+          - php
+          - php-mysql
+        state: present
+        update_cache: true
+    - name: start apache service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+    - name: Copy index.php
+      copy:
+        src: "{{item }}"
+        dest: "{{ document_root_path }}"
+        owner: root
+        group: root
+        mode: 0644
+      loop:
+        - /home/yoda/files/index.php
+    - name: vhost config block
+      block:
+      - name: Copy vhost config
+        copy:
+          src: "/home/yoda/files/ansible_site.conf"
+          dest: "{{ vhost_config_file }}"
+          owner: root
+          group: root
+          mode: 0644
+        notify: restart apache
+      - name: check configuration validity
+        command: httpd -t
+      rescue:
+      - name: remove bad virtual host configuration
+        file:
+          path: "{{ vhost_config_file }}"
+          state: absent
+      - name: Rooling back - ending playbook
+        fail:
+          msg: "Congifuration file is not valid, Please check that before re-running the playbook"
+    - name: configure httpd.conf
+      lineinfile:
+        path: "{{ apache_config_file }}"
+        regexp: "^IncludeOptional"
+        line: "IncludeOptional conf.d/*.conf"
+      notify: restart apache
+
+      loop:
+        - /home/yoda/files/index.php
+    - name: remove index.html
+      file:
+        path: /var/www/html/index.php
+        state: absent
+
+    - name: install hello world script with db
+      copy:
+        src: /home/yoda/files/db.php
+        dest:  " {{ document_root_path}}"
+        owner: root
+        group: root
+        mode: 0644
+    - name: allow SSH trafic
+      firewalld:
+        port: 80/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+  handlers:
+    - name: restart apache
+      service:
+        name: httpd
+        state: restarted

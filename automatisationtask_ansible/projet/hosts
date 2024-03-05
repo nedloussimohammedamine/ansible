@@ -1,0 +1,22 @@
+[control]
+controller ansible_connection=local domainname=control.domain.com
+
+[web]
+web2 ansible_host=192.168.60.7 domainname=web.domain.com
+web1 ansible_host=192.168.60.6 domainname=web.domain.com
+
+[lb]
+lb1 ansible_host=192.168.60.5 domainname=lb.domain.com
+
+[db]
+db1 ansible_host=192.168.60.8 domainname=db.domain.com
+
+192.168.60.6 web1  Domain not defined for this host.
+192.168.60.7 web2  Domain not defined for this host.
+
+
+192.168.60.4 controller  Domain not defined for this host.
+192.168.60.6 web1  Domain not defined for this host.
+192.168.60.7 web2  Domain not defined for this host.
+192.168.60.5 lb1  Domain not defined for this host.
+192.168.60.8 db1  Domain not defined for this host.
